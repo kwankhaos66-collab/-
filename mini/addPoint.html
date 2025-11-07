@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ค้นหาจุด - WEB GIS</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Sarabun", sans-serif;
+            background: linear-gradient(180deg, #ffe6f2 0%, #fce7f3 50%, #e0f2fe 100%);
+            overflow-x: hidden;
+            color: #444;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 💖 หัวใจพื้นหลังลอย */
+        .heart {
+            position: absolute;
+            color: #f9a8d4;
+            font-size: 24px;
+            opacity: 0.8;
+            animation: floatHearts 6s ease-in-out infinite;
+        }
+
+        @keyframes floatHearts {
+            0% { transform: translateY(0) scale(1); opacity: 0.8; }
+            50% { transform: translateY(-60px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(0) scale(1); opacity: 0.8; }
+        }
+
+        /* 🐱 แมวตกแต่ง */
+        .cat-left, .cat-right {
+            position: fixed;
+            bottom: 0;
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            opacity: 0.9;
+            z-index: 10;
+        }
+
+        .cat-left {
+            left: 20px;
+            transform: rotateY(180deg);
+            animation: catWave 4s infinite ease-in-out;
+        }
+
+        .cat-right {
+            right: 20px;
+            animation: catWave 4s infinite ease-in-out;
+            animation-delay: 2s;
+        }
+
+        @keyframes catWave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* 🌈 Header */
+        .header {
+            background: linear-gradient(90deg, #f9a8d4, #93c5fd);
+            padding: 16px 0;
+            box-shadow: 0 2px 8px rgba(249, 168, 212, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-section img {
+            width: 36px;
+            height: 36px;
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn {
+            color: #fff;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #fff;
+            color: #db2777;
+            box-shadow: 0 0 10px rgba(249,168,212,0.5);
+        }
+
+        /* 🌸 Content */
+        .content {
+            max-width: 1100px;
+            margin: 60px auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #db2777;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 15px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        select, button {
+            padding: 12px 16px;
+            border: 1px solid #fbcfe8;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            color: #374151;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.1);
+        }
+
+        button {
+            cursor: pointer;
+            background: #db2777;
+            color: white;
+            border-color: #db2777;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: #be185d;
+            border-color: #be185d;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            border: 1px solid #fbcfe8;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(249,168,212,0.3);
+        }
+
+        /* Modal Styles (เหมือนเดิม) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border: none;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            background: white;
+            color: #1e293b;
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            letter-spacing: -0.3px;
+        }
+
+        .modal-header .close {
+            color: #64748b;
+            font-size: 28px;
+            font-weight: 300;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s;
+        }
+
+        .modal-header .close:hover,
+        .modal-header .close:focus {
+            color: #1e293b;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #fbcfe8;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+            color: #374151;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #db2777;
+            box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: center;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .modal-footer button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-submit {
+            background: #db2777;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            background: #be185d;
+        }
+
+        .form-group input[readonly] {
+            background-color: #fce7f3;
+            cursor: not-allowed;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .header-inner { flex-direction: column; gap: 16px; }
+            .nav { width: 100%; justify-content: center; }
+            .content { padding: 0 16px; margin-top: 40px; }
+            .controls { flex-direction: column; }
+            #map { height: 400px; }
+            .modal-content { width: 95%; margin: 20% auto; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 💖 หัวใจลอย -->
+    <div class="heart" style="left:10%; top:80%;">❤️</div>
+    <div class="heart" style="left:70%; top:60%;">💗</div>
+    <div class="heart" style="left:50%; top:40%;">💖</div>
+
+    <!-- 🐱 แมว -->
+    <img src="./cat.png" alt="Cat" class="cat-left">
+    <img src="./cat.png" alt="Cat" class="cat-right">
+
+    <div class="header">
+        <div class="header-inner">
+            <div class="logo-section">
+                <img src="./รูปหน้าเว็บ.png" alt="Logo" />
+                <div class="header-title">WEB GIS</div>
+            </div>
+            <div class="nav">
+                <a href="./index.html" class="nav-btn">กลับหน้าหลัก</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <h1 class="page-title">บันทึกข้อมูลและค้นหาจุดบนแผนที่</h1>
+        <div class="controls">
+            <select title="Select" id="searchSelect">
+                <option value="">-- เลือกจุดเพื่อค้นหา --</option>
+            </select>
+            <button id="resetBtn">รีเซ็ต</button>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- Modal เพิ่มข้อมูล -->
+    <div id="addPointModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>เพิ่มข้อมูลตำแหน่งที่คลิก</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addPointForm">
+                    <div class="form-group">
+                        <label for="pointLat">Lat:</label>
+                        <input type="text" id="pointLat" name="pointLat" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="pointLon">Lng:</label>
+                        <input type="text" id="pointLon" name="pointLon" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="pointName">Name:</label>
+                        <input type="text" id="pointName" name="pointName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pointTypeDorm">type_dorm:</label>
+                        <input type="text" id="pointTypeDorm" name="pointTypeDorm">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-submit" id="submitBtn">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
+    <script src="./script.js"></script>
+</body>
+</html>

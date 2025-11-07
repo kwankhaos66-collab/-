@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เข้าสู่ระบบ</title>
+</head>
+<body>
+  <h2>เข้าสู่ระบบ</h2>
+
+  <form onsubmit="loginUser(event)">
+    <label>ชื่อผู้ใช้:</label>
+    <input type="text" id="username" required><br><br>
+
+    <label>รหัสผ่าน:</label>
+    <input type="password" id="password" required><br><br>
+
+    <button type="submit">เข้าสู่ระบบ</button>
+  </form>
+
+  <script>
+    // ฟังก์ชันเข้าสู่ระบบจำลอง
+    function loginUser(e) {
+      e.preventDefault(); // ป้องกันการรีเฟรชหน้า
+
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+
+      if (user === "peem" && pass === "1234") {
+        alert("🎉 ยินดีต้อนรับเข้าสู่โลกสายรุ้งของภีมชนัญญา 💙🌈");
+        window.location.href = "profile.html"; // ไปหน้าโปรไฟล์
+      } else {
+        alert("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง 😜");
+      }
+    }
+  </script>
+</body>
+</html>
+🧜🏻‍♂️
+<form onsubmit="loginUser(event)">
+  <label for="username">ชื่อผู้ใช้:</label>
+  <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้" required>
+  <br><br>
+
+  <label for="password">รหัสผ่าน:</label>
+  <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required>
+  <br><br>
+
+  <button type="submit">เข้าสู่ระบบ</button>
+</form>
+🧜🏻‍♂️
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เข้าสู่ระบบ</title>
+</head>
+<body>
+  <h2>เข้าสู่ระบบ</h2>
+
+  <form onsubmit="loginUser(event)">
+    <label for="username">ชื่อผู้ใช้:</label>
+    <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้" required>
+    <br><br>
+
+    <label for="password">รหัสผ่าน:</label>
+    <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required>
+    <br><br>
+
+    <button type="submit">เข้าสู่ระบบ</button>
+  </form>
+
+  <script>
+    function loginUser(e) {
+      e.preventDefault();
+
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+
+      if (user === "peem" && pass === "1234") {
+        alert("🎉 ยินดีต้อนรับเข้าสู่ระบบนะ 💙🌈");
+        window.location.href = "profile.html";
+      } else {
+        alert("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง 😜");
+      }
+    }
+  </script>
+</body>
+</html>
